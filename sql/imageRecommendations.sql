@@ -16,5 +16,5 @@ create table imageRecommendations (
     rating tinyint(1) default null,
     `sensitive` tinyint(1) default null,
     primary key (id),
-    foreign key (unillustratedArticleId) references unillustratedArticles(id)
+    foreign key (unillustratedArticleId) references unillustratedArticles(id) on delete cascade
 ) engine innodb;

@@ -70,11 +70,11 @@ class PopulateUnillustratedArticlesTable extends GenericJob {
                     }
                 }
                 echo "... of which " . count( $randomPages ) . " are non-disambiguation pages. \n";
-                $randomNonDisambigPages += $randomPages;
+                $randomNonDisambigPages = array_merge( $randomNonDisambigPages, $randomPages );
             }
-            $randomPages = array_slice( $randomPages, 0, 500, true );
-            echo "Inserting 500 " . $source["langCode"] . " unillustrated articles into db.\n";
-            foreach ( $randomPages as $articleId => $pageTitle ) {
+            $randomNonDisambigPages = array_slice( $randomNonDisambigPages, 0, 500, true );
+            echo "Inserting 500 " . $source["langCode"] . " unillustrated non-disambiguation articles into db.\n";
+            foreach ( $randomNonDisambigPages as $articleId => $pageTitle ) {
                 $this->db->query( 'insert into unillustratedArticles set ' .
                     'articleId = ' . intval( $articleId ) . ',' .
                     'langCode = "' . $this->db->real_escape_string( $source['langCode'] ) . '",' .
