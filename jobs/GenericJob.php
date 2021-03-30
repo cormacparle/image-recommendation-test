@@ -8,6 +8,7 @@ abstract class GenericJob {
 
     protected $db;
     protected $config;
+    protected $logFileHandle;
 
     public function parseConfigFromStandardLocation() {
         $config = parse_ini_file( __DIR__ . '/../config.ini', true );
@@ -18,6 +19,13 @@ abstract class GenericJob {
             );
         }
         return $config;
+    }
+
+    protected function setLogFileHandle( $logFilePath ) {
+        $this->logFileHandle = fopen(
+            $logFilePath,
+            'a'
+        );
     }
 
     public function __construct( array $config = null ) {
@@ -37,12 +45,19 @@ abstract class GenericJob {
         }
     }
 
+    public function __destruct() {
+        if ( !is_null( $this->logFileHandle ) ) {
+            fclose( $this->logFileHandle );
+        }
+    }
+
     abstract public function run();
 
     protected function httpGETJson( string $url, ...$params ) : array {
         $params = array_map( 'urlencode', $params );
         $ch = curl_init();
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+        curl_setopt( $ch, CURLOPT_USERAGENT, 'Image recommendations test data collector' );
 
         if ( count( $params ) > 0 ) {
             $url = sprintf(
@@ -66,5 +81,9 @@ abstract class GenericJob {
             die( "Unexpected result format.\n" );
         }
         return $array;
+    }
+
+    protected function log( $msg ) {
+        fwrite( $this->logFileHandle, date( 'Y-m-d H:i:s' ) . ': ' . $msg . "\n" );
     }
 }

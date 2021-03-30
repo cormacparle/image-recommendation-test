@@ -1,10 +1,9 @@
 create table unillustratedArticles (
     id int not null auto_increment,
-    articleId int not null,
     langCode varchar(3) not null,
     pageTitle varchar(255) not null,
     primary key (id),
-    unique key (langCode, articleId)
+    unique key (langCode, pageTitle)
 ) engine innodb;
 
 create table imageRecommendations (
