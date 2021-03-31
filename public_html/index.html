@@ -72,6 +72,8 @@
                 <option value="ar">عربي</option>
                 <option value="ceb">Sugbuanon</option>
                 <option value="vi">Tiếng Việt</option>
+                <option value="bn">বাংলা</option>
+                <option value="cs">čeština</option>
             </select>
         </div>
 
@@ -121,6 +123,9 @@
 			var request = new Request( 'fetch.php?langCode=' + encodeURIComponent( langCode ), { method: 'GET' } );
 			var response = await window.fetch( request );
 			var data = await response.json();
+			if ( data.resultImageUrl === undefined ) {
+				throw new Error( 'No data found for ' + langCode );
+            }
 
 			// a lot of images fail to load (no thumb available -> thumb generation throttled)
 			// return current image's response if we manage to decode the image; else fetch another

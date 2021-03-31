@@ -13,7 +13,7 @@ class PrepareDataForRating extends GenericJob {
 
     public function run() {
         $sources = [
-            /*[
+            [
                 'langCode' => 'ar',
                 'unillustratedArticleCount' => 58171 //581711
             ],
@@ -28,7 +28,7 @@ class PrepareDataForRating extends GenericJob {
             [
                 'langCode' => 'vi',
                 'unillustratedArticleCount' => 86767 //867673
-            ],*/
+            ],
             [
                 'langCode' => 'bn',
                 'unillustratedArticleCount' => 3364 //33643
@@ -72,18 +72,23 @@ class PrepareDataForRating extends GenericJob {
             'langCode = "' . $this->db->real_escape_string( $langCode ) . '",' .
             'pageTitle = "' . $this->db->real_escape_string( $pageTitle ) . '"' );
         $articleId = $this->db->insert_id;
-        foreach ( $suggestions as $suggestion ) {
-            $filePages[] = $this->fixTitle( $suggestion['filename'] );
+        foreach ( $suggestions as &$suggestion ) {
+            $suggestion['filename'] = $this->fixTitle( $suggestion['filename'] );
         }
-        $filePageMetaData = $this->getFileMetadata( $filePages );
-        foreach ( $filePages as $filePage ) {
+        $filePageMetaData = $this->getFileMetadata(
+            array_column( $suggestions, 'filename' )
+        );
+        foreach ( $suggestions as $suggestion ) {
             $this->db->query(
                 'insert into imageRecommendations set ' .
                 'unillustratedArticleId=' . intval( $articleId ) . ',' .
-                'resultFilePage="' . $this->db->real_escape_string( $filePage )  . '",' .
+                'resultFilePage="' . $this->db->real_escape_string( $suggestion['filename'] )  . '",' .
                 'resultImageUrl="' . $this->db->real_escape_string(
-                    $this->getImageUrl( $filePage, $filePageMetaData )
-                ) . '"'
+                    $this->getImageUrl( $suggestion['filename'], $filePageMetaData )
+                ) . '",' .
+                'source="' . $this->db->real_escape_string( $suggestion['source'] )  . '",' .
+                'confidence_class="' . $this->db->real_escape_string( $suggestion['confidence_rating'] )  .
+                '"'
             );
         }
     }

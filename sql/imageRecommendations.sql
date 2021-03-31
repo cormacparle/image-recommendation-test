@@ -12,6 +12,7 @@ create table imageRecommendations (
     resultFilePage varchar(255) not null,
     resultImageUrl varchar(255) not null,
     source varchar(255) default null,
+    confidence_class varchar(10) default null,
     rating tinyint(1) default null,
     `sensitive` tinyint(1) default null,
     primary key (id),

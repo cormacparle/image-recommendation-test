@@ -23,12 +23,7 @@ $result = $mysqli->query(
 	and langCode = "' . $mysqli->real_escape_string( $langCode ) . '"
 	order by rand() limit 1'
 );
-
 $mysqli->close();
 
-if ( $result === false ) {
-    throw new Exception( 'No image found' );
-}
-
 header('Content-Type: application/json');
-echo json_encode( $result->fetch_assoc() );
+echo json_encode( $result->num_rows > 0 ? $result->fetch_assoc() : new stdClass() );
