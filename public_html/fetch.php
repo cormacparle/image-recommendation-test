@@ -23,7 +23,11 @@ $result = $mysqli->query(
 	and langCode = "' . $mysqli->real_escape_string( $langCode ) . '"
 	order by rand() limit 1'
 );
-$mysqli->close();
-
 header('Content-Type: application/json');
-echo json_encode( $result->num_rows > 0 ? $result->fetch_assoc() : new stdClass() );
+if ( $result->num_rows > 0 ) {
+    $row = $result->fetch_assoc();
+    echo json_encode( $row );
+} else {
+    echo json_encode( new stdClass() );
+}
+$mysqli->close();

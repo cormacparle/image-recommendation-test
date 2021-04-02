@@ -120,6 +120,7 @@
         var langCode = url.searchParams.get( 'uselang' ) || 'en';
 
         async function fetchImage( langCode ) {
+            var langCode = langCode || 'en';
 			var request = new Request( 'fetch.php?langCode=' + encodeURIComponent( langCode ), { method: 'GET' } );
 			var response = await window.fetch( request );
 			var data = await response.json();
