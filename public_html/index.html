@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <title>Image relevance classifier</title>
     <style>
-        .articleName {
+        .article_name {
             font-weight: bold;
         }
         .container {
@@ -62,8 +62,8 @@
         }
     </style>
     <template>
-        <h1>Suggested images for unillustrated articles</h1>
-        <p>Help us understand image placement by evaluating whether the image below would be suitable for illustrating the article below.</p>
+        <h1>Suggested images for articles</h1>
+        <p>Help us understand article images by telling us if the image below is suitable for the article below.</p>
 
         <div>
             <h3>Preferred language:</h3>
@@ -79,37 +79,37 @@
 
         <div class="container">
             <div class="column">
-                <p>Here's an article we think is unillustrated or under-illustrated:</p>
-                <h3><a href="" class="article_url article_name" target="_blank"></a></h3>
+                <p>Here is an article that we think needs an image:</p>
                 <div class="iframecontainer">
                     <iframe class="api_url"></iframe>
                 </div>
+                <h3><a href="" class="article_url article_name" target="_blank"></a></h3>
             </div>
 
             <div class="column">
-                <p>... and here's an image we think might work in the article. Does it work?</p>
+                <p>... and here is an image we think might fit the article. What kind of fit is the image for the article?</p>
 
                 <p>
-                    <button class="button positive" name="rating" value="1">Yes</button>
-                    <button class="button semi" name="rating" value="0">Meh</button>
-                    <button class="button negative" name="rating" value="-1">No</button>
-                    <button class="button neutral" name="skip">Dunno</button>
+                    <button class="button positive" name="rating" value="1">Good</button>
+                    <button class="button semi" name="rating" value="0">Okay</button>
+                    <button class="button negative" name="rating" value="-1">Bad</button>
+                    <button class="button neutral" name="skip">Unsure</button>
                 </p>
 
-                <p>We're also interested in whether the image is unsuitable for a general audience, for any reason - for example if it's pornographic or contains violent or illegal imagery</p>
+                <p>We are also interested in whether the image is unsuitable for a general audience, for any reason - for example if it contains sexually explicit or violent or illegal imagery.</p>
 
                 <p>
                     <button class="button positive" name="sensitive" value="0">It's ok</button>
-                    <button class="button negative" name="sensitive" value="1">It's dodgy</button>
-                    <button class="button neutral" name="sensitive" value="-1">Dunno</button>
+                    <button class="button negative" name="sensitive" value="1">It's unsuitable</button>
+                    <button class="button neutral" name="sensitive" value="-1">Unsure</button>
                 </p>
 
                 <p>
                     <img class="image_url" />
                 </p>
-                <p>
+                <h3>
                     <a class="commons_url file_page" href="https://commons.wikimedia.org/" target="_blank"></a></li>
-                </p>
+                </h3>
 
             </div>
 
@@ -142,6 +142,13 @@
 			var request = new Request( 'submit.php', { method: 'POST', body: formData } );
 			return window.fetch( request );
 		}
+        async function skipImage( id, sensitive ) {
+	        var formData = new FormData();
+	        formData.append( 'id', id );
+	        formData.append( 'sensitive', sensitive );
+	        var request = new Request( 'skip.php', { method: 'POST', body: formData } );
+	        return window.fetch( request );
+        }
 		function populateTemplate( data ) {
 			var template = document.querySelector( 'template' );
 			var clone = template.content.cloneNode( true );
@@ -187,6 +194,8 @@
 				}
 			} ) );
 			template.querySelectorAll( '.button[name=skip]' ).forEach( node => node.addEventListener( 'click', () => {
+				skipImage( data.id, sensitive );
+				rating = sensitive = null;
 				showAnother( next );
 			} ) );
 			template.querySelectorAll( '.button[name=sensitive]' ).forEach( node => node.addEventListener( 'click', e => {

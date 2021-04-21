@@ -14,15 +14,14 @@ if ( $mysqli->connect_error ) {
         . $mysqli->connect_error);
 }
 
-if ( !isset( $_POST['id'] ) || !isset( $_POST['rating'] ) || !isset( $_POST['sensitive'] )) {
+if ( !isset( $_POST['id'] )) {
     throw new Exception( 'Missing data' );
 }
 
-echo "rated image " . intval( $_POST['id'] ) . " with " . intval( $_POST['rating'] ) . "\n";
+echo "cannot rate image " . intval( $_POST['id'] ) . "\n";
 $mysqli->query(
     'update imageRecommendations 
-    set rating='. intval( $_POST['rating'] ) .',
-    viewCount=viewCount+1
+    set viewCount=viewCount+1
     where id=' . intval( $_POST['id'] )
 );
 if ( $_POST['sensitive'] === '0' || $_POST['sensitive'] === '1' ) {

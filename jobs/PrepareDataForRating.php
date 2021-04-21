@@ -12,62 +12,52 @@ class PrepareDataForRating extends GenericJob {
     }
 
     public function run() {
-        $sources = [
-            [
-                'langCode' => 'ar',
-                'unillustratedArticleCount' => 58171 //581711
-            ],
-            [
-                'langCode' => 'ceb',
-                'unillustratedArticleCount' => 135740 //1357406
-            ],
-            [
-                'langCode' => 'en',
-                'unillustratedArticleCount' => 293261 //2932614
-            ],
-            [
-                'langCode' => 'vi',
-                'unillustratedArticleCount' => 86767 //867673
-            ],
-            [
-                'langCode' => 'bn',
-                'unillustratedArticleCount' => 3364 //33643
-            ],
-            [
-                'langCode' => 'cs',
-                'unillustratedArticleCount' => 18217 //182178
-            ],
-        ];
+        $languages = [ 'ar', 'ceb', 'en', 'vi', 'bn', 'cs' ];
 
-        foreach ( $sources as $source ) {
-            $this->log( "Finding suggestions for " . $source['langCode'] . " wiki" );
-            $failedPages = $pages = [];
-            while ( count( $pages ) < 500 ) {
-                $randomPageNumber = mt_rand( 1, $source['unillustratedArticleCount'] );
-                if ( isset( $pages[$randomPageNumber] ) ) {
-                    continue;
+        foreach ( $languages as $language ) {
+            $unillustratedPagesForLanguage = [];
+            $this->log( "Finding suggestions for " . $language . " wiki" );
+            foreach ( [ 'ms', 'ima' ] as $source ) {
+                $pageCount = 0;
+                while ( $pageCount < 250 ) {
+                    $timeStart = microtime(true);
+                    // results are returned in random order, and "limit" is an upper bound rather
+                    // than an exact number, so keep requesting results until we have enough,
+                    // keeping track of them in $unillustratedPagesForLanguage so we don't store
+                    // duplicates
+                    $result =
+                        $this->httpGETJson(
+                            $this->config['search']['apiEndpoint'] . '?limit=100&source='  .
+                            $source,
+                            $language
+                        );
+                    $apiResponseTime = microtime(true) - $timeStart;
+                    $this->log( 'API response time (limit=100, source=' . $source. ', language='
+                        . $language . ', resultCount=' . count( $result['pages'] ) . '): ' .
+                        $apiResponseTime . 's' );
+                    if ( count( $result['pages'] ) === 0 ) {
+                        continue;
+                    }
+                    $this->log( 'Found ' . count( $result['pages'] ) . ' pages with suggestions.' );
+                    foreach ( $result['pages'] as $page ) {
+                        if ( $pageCount >= 250 ) {
+                            break;
+                        }
+                        if ( !in_array( $page['page'], $unillustratedPagesForLanguage ) ) {
+                            $pageCount++;
+                            $unillustratedPagesForLanguage[] = $page['page'];
+                            $this->save( $language, $page['page'], $page['suggestions'] );
+                        }
+                    }
+                    $this->log( $pageCount . ' pages so far for ' . $language . ' for source '
+                        . $source );
                 }
-
-                $result =
-                    $this->httpGETJson( $this->config['search']['apiEndpoint'] . '?limit=1&offset=' .
-                        $randomPageNumber, $source['langCode'] );
-                if ( count($result) === 0 || count( $result[0]['suggestions'] ) === 0 ) {
-                    $failedPages[$randomPageNumber] = 1;
-                    $this->log( 'Page at position ' . $randomPageNumber . ': no suggestions found' );
-                    continue;
-                }
-                $pages[$randomPageNumber] = 1;
-                $this->save( $source['langCode'], $result[0]['page'],
-                    $result[0]['suggestions'], $randomPageNumber );
-                $this->log( 'Page at position ' . $randomPageNumber .
-                    ' (' . $result[0]['page'] . '): suggestions found' );
             }
-            $this->log( "Finished " . $source['langCode'] . " wiki." );
+            $this->log( "Finished " . $language . " wiki." );
         }
     }
 
-    private function save( string $langCode, string $pageTitle, array $suggestions,
-                           $randomPageNumber ) {
+    private function save( string $langCode, string $pageTitle, array $suggestions ) {
         $this->db->query( 'insert into unillustratedArticles set ' .
             'langCode = "' . $this->db->real_escape_string( $langCode ) . '",' .
             'pageTitle = "' . $this->db->real_escape_string( $pageTitle ) . '"' );
@@ -86,11 +76,13 @@ class PrepareDataForRating extends GenericJob {
                 'resultImageUrl="' . $this->db->real_escape_string(
                     $this->getImageUrl( $suggestion['filename'], $filePageMetaData )
                 ) . '",' .
-                'source="' . $this->db->real_escape_string( $suggestion['source'] )  . '",' .
+                'source="' . $this->db->real_escape_string( $suggestion['source']['name'] )  . '",' .
                 'confidence_class="' . $this->db->real_escape_string( $suggestion['confidence_rating'] )  .
                 '"'
             );
         }
+        $this->log( 'Page ' . $pageTitle . ': ' .
+            count( $suggestions ) . ' suggestions found' );
     }
 
     private function fixTitle( string $title ) : string {

@@ -1,3 +1,6 @@
+drop table if exists imageRecommendations;
+drop table if exists unillustratedArticles;
+
 create table unillustratedArticles (
     id int not null auto_increment,
     langCode varchar(3) not null,
