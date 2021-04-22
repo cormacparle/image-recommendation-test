@@ -119,8 +119,7 @@
         var url = new URL( window.location.href );
         var langCode = url.searchParams.get( 'uselang' ) || 'en';
 
-        async function fetchImage( langCode ) {
-            var langCode = langCode || 'en';
+        async function fetchImage() {
 			var request = new Request( 'fetch.php?langCode=' + encodeURIComponent( langCode ), { method: 'GET' } );
 			var response = await window.fetch( request );
 			var data = await response.json();
@@ -175,7 +174,7 @@
 		async function render( data ) {
 			var rating = null, sensitive = null;
 			// pre-fetch next image
-			var next = fetchImage( langCode );
+			var next = fetchImage();
 
 			// render current image
 			var template = populateTemplate( data );
@@ -214,7 +213,7 @@
 				langCode = e.target.value;
 				url.searchParams.set( 'uselang', langCode );
 				history.replaceState( null, '', url.toString() );
-				fetchImage( e.target.value ).then( render );
+				fetchImage().then( render );
 			} );
 
 			// make sure to delay until <body> has been created
@@ -223,11 +222,11 @@
 					document.body.removeChild( document.body.childNodes[0] );
 				}
 				document.body.append( template );
-				document.getElementById( 'languageSelector' ).value = langCode || 'en';
+				document.getElementById( 'languageSelector' ).value = langCode;
 			} );
 		}
 
-        fetchImage( langCode ).then( render );
+        fetchImage().then( render );
     </script>
 </head>
 <body>
