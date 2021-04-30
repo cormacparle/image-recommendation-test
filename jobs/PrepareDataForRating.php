@@ -18,7 +18,13 @@ class PrepareDataForRating extends GenericJob {
             $unillustratedPagesForLanguage = [];
             $this->log( "Finding suggestions for " . $language . " wiki" );
             foreach ( [ 'ms', 'ima' ] as $source ) {
-                $pageCount = 0;
+                $pageCountResult = $this->db->
+                    query('select count(distinct unillustratedArticles.id) as count from ' .
+                        'unillustratedArticles join imageRecommendations on ' .
+                        'unillustratedArticles.id=imageRecommendations.unillustratedArticleId ' .
+                        'where langCode=\'' . $language . '\' and source=\'' . $source . '\'' )
+                    ->fetch_assoc();
+                $pageCount = intval( $pageCountResult['count'] );
                 while ( $pageCount < 250 ) {
                     $timeStart = microtime(true);
                     // results are returned in random order, and "limit" is an upper bound rather
@@ -27,7 +33,7 @@ class PrepareDataForRating extends GenericJob {
                     // duplicates
                     $result =
                         $this->httpGETJson(
-                            $this->config['search']['apiEndpoint'] . '?limit=100&source='  .
+                            $this->config['endpoint']['api'] . '?limit=100&source='  .
                             $source,
                             $language
                         );

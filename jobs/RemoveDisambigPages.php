@@ -12,8 +12,7 @@ class RemoveDisambigPages extends GenericJob {
     }
 
     public function run() {
-        $disambigEndpoint = 'https://%s.wikipedia.org/w/api.php?action=query' .
-            '&format=json&prop=pageprops&titles=%s&ppprop=disambiguation';
+        $disambigEndpoint = $this->config['endpoint']['pageprops'];
         $articles = $this->db->query('select * from unillustratedArticles order by langCode asc' );
         $lastLangCode = 'bn';
         $titles = $titleMapping = [];
