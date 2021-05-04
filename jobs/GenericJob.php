@@ -86,4 +86,8 @@ abstract class GenericJob {
     protected function log( $msg ) {
         fwrite( $this->logFileHandle, date( 'Y-m-d H:i:s' ) . ': ' . $msg . "\n" );
     }
+
+    protected function dbEscape( $value ) {
+        return $this->db->real_escape_string( $value );
+    }
 }
