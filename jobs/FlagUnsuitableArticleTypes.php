@@ -30,21 +30,22 @@ class FlagUnsuitableArticleTypes extends GenericJob {
                 $article['pageTitle']
             );
             $entity = array_pop($result['entities'] );
-            foreach ( $entity['claims'] as $pid => $claimsForPid ) {
-                if ( $pid !== 'P31' ) {
-                    continue;
-                }
-                foreach ( $claimsForPid as $claim ) {
-                    if ( in_array( $claim['mainsnak']['datavalue']['value']['id'],
-                        self::$unsuitablePageTypes ) ) {
-                        $unsuitableArticleType = true;
+            if ( isset( $entity['claims'] ) ) {
+                foreach ( $entity['claims'] as $pid => $claimsForPid ) {
+                    if ( $pid !== 'P31' ) {
+                        continue;
+                    }
+                    foreach ( $claimsForPid as $claim ) {
+                        if ( in_array( $claim['mainsnak']['datavalue']['value']['id'],
+                            self::$unsuitablePageTypes ) ) {
+                            $unsuitableArticleType = true;
+                        }
                     }
                 }
-            }
-            if ( $unsuitableArticleType ) {
-                $this->db->query( 'update unillustratedArticles set unsuitableArticleType=1 ' .
-                    'where id='. intval( $article['id'] )
-                );
+                if ( $unsuitableArticleType ) {
+                    $this->db->query( 'update unillustratedArticles set unsuitableArticleType=1 ' .
+                        'where id=' . intval( $article['id'] ) );
+                }
             }
         }
     }
