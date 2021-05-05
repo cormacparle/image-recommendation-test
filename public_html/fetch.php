@@ -21,6 +21,7 @@ $result = $mysqli->query(
 	on imageRecommendations.unillustratedArticleId=unillustratedArticles.id
 	where rating is null 
 	and langCode = "' . $mysqli->real_escape_string( $langCode ) . '"
+	and unsuitableArticleType=0
 	order by rand() limit 1'
 );
 header('Content-Type: application/json');

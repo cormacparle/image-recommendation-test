@@ -1,0 +1,55 @@
+<?php
+
+namespace ImageRecommendationTest\Jobs;
+
+include( __DIR__ . '/GenericJob.php' );
+
+class FlagUnsuitableArticleTypes extends GenericJob {
+
+    private static $unsuitablePageTypes = [
+        "Q577", // year page
+        "Q3186692", // calendar year page
+        "Q4167410", // disambiguation page
+        "Q13406463", // list page
+        "Q101352", // family name
+    ];
+
+    public function __construct( array $config = null ) {
+        parent::__construct( $config );
+        $this->setLogFileHandle( __DIR__ . '/../' . $this->config['log']['flagUnsuitableArticleTypes'] );
+    }
+
+    public function run() {
+        $articles = $this->db->query('select id,pageTitle,langCode from unillustratedArticles ' .
+            'order by langCode asc' );
+        while ( $article = $articles->fetch_assoc() ) {
+            $unsuitableArticleType = false;
+            $result = $this->httpGETJson(
+              $this->config['endpoint']['wbgetentities'],
+                $article['langCode'],
+                $article['pageTitle']
+            );
+            $entity = array_pop($result['entities'] );
+            foreach ( $entity['claims'] as $pid => $claimsForPid ) {
+                if ( $pid !== 'P31' ) {
+                    continue;
+                }
+                foreach ( $claimsForPid as $claim ) {
+                    if ( in_array( $claim['mainsnak']['datavalue']['value']['id'],
+                        self::$unsuitablePageTypes ) ) {
+                        $unsuitableArticleType = true;
+                    }
+                }
+            }
+            if ( $unsuitableArticleType ) {
+                $this->db->query( 'update unillustratedArticles set unsuitableArticleType=1 ' .
+                    'where id='. intval( $article['id'] )
+                );
+            }
+        }
+    }
+}
+
+$job = new FlagUnsuitableArticleTypes();
+$job->run();
+echo "Done\n";
