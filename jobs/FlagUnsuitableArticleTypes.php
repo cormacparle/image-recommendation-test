@@ -12,6 +12,8 @@ class FlagUnsuitableArticleTypes extends GenericJob {
         "Q4167410", // disambiguation page
         "Q13406463", // list page
         "Q101352", // family name
+        "Q12308941", // male given name
+        "Q11879590", // female given name
     ];
 
     public function __construct( array $config = null ) {
