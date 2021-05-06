@@ -14,6 +14,7 @@ class FlagUnsuitableArticleTypes extends GenericJob {
         "Q101352", // family name
         "Q12308941", // male given name
         "Q11879590", // female given name
+        "Q18340514", // events in a specific year or time period
     ];
 
     public function __construct( array $config = null ) {
