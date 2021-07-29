@@ -29,15 +29,12 @@ abstract class GenericJob {
     }
 
     public function __construct( array $config = null ) {
-        if ( is_null( $config ) )  {
-            $config = $this->parseConfigFromStandardLocation();
-        }
-        $this->config = $config;
+        $this->config = array_merge( $this->parseConfigFromStandardLocation(), $config ?? []);
         $this->db = new mysqli(
-            $config['db']['host'],
-            $config['client']['user'],
-            $config['client']['password'],
-            $config['db']['dbname']
+            $this->config['db']['host'],
+            $this->config['client']['user'],
+            $this->config['client']['password'],
+            $this->config['db']['dbname']
         );
         if ( $this->db->connect_error ) {
             die('DB connection Error (' . $this->db->connect_errno . ') '
